@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "devops.execution/v1",
+  "executionId": "22222222-2222-4222-8222-222222222222",
+  "jobRunId": "33333333-3333-4333-8333-333333333333",
+  "template": {
+    "key": "image.build-push",
+    "version": "1.0.0"
+  },
+  "executor": {
+    "kind": "jenkins",
+    "controllerId": "jenkins-primary",
+    "jobFullName": "spaces/space-demo/atomic-runner",
+    "agentLabel": "devops-build",
+    "timeoutSeconds": 1800,
+    "sourceRequired": true,
+    "nodePoolId": "build-default",
+    "runnerVersion": "runner-v1"
+  },
+  "inputs": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "context": {
+    "space": {
+      "id": "44444444-4444-4444-8444-444444444444"
+    },
+    "application": {
+      "id": "55555555-5555-4555-8555-555555555555",
+      "key": "demo-api"
+    },
+    "environment": {
+      "id": "66666666-6666-4666-8666-666666666666",
+      "key": "test"
+    },
+    "run": {
+      "id": "11111111-1111-4111-8111-111111111111"
+    },
+    "source": {
+      "repository_url": "https://git.example.com/team/demo-api.git",
+      "requested_ref": "refs/tags/v1.0.0",
+      "commit_sha": "0123456789abcdef0123456789abcdef01234567"
+    },
+    "image": {
+      "registry": "registry.example.com",
+      "repository": "registry.example.com/demo/demo-api"
+    },
+    "job": {
+      "id": "33333333-3333-4333-8333-333333333333",
+      "key": "build_image"
+    }
+  },
+  "credentialBindings": {
+    "source": {
+      "kind": "username_password",
+      "jenkinsCredentialId": "space-demo-source"
+    },
+    "registry": {
+      "kind": "username_password",
+      "jenkinsCredentialId": "space-demo-registry"
+    }
+  },
+  "script": {
+    "interpreter": "bash",
+    "content": "set -euo pipefail\ndockerfile=$(jq -er '.inputs.dockerfile' \"$DEVOPS_INPUT_FILE\")\ncontext=$(jq -er '.inputs.context' \"$DEVOPS_INPUT_FILE\")\nrepository=$(jq -er '.context.image.repository' \"$DEVOPS_INPUT_FILE\")\nrun_id=$(jq -er '.context.run.id' \"$DEVOPS_INPUT_FILE\")\njob_key=$(jq -er '.context.job.key' \"$DEVOPS_INPUT_FILE\")\nmetadata_file=$(mktemp)\ntrap 'rm -f \"$metadata_file\"' EXIT\ndocker buildx build --push --file \"$dockerfile\" --tag \"${repository}:${run_id}-${job_key}\" --metadata-file \"$metadata_file\" -- \"$context\"\ndigest=$(jq -er '.\"containerimage.digest\"' \"$metadata_file\")\njq -n --arg image_ref \"${repository}@${digest}\" --arg image_digest \"$digest\" '{image_ref: $image_ref, image_digest: $image_digest}' > \"$DEVOPS_OUTPUT_FILE\"\n"
+  },
+  "outputsSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "image_ref": {
+        "type": "string",
+        "pattern": "^[^\\s]+@sha256:[a-f0-9]{64}$"
+      },
+      "image_digest": {
+        "type": "string",
+        "pattern": "^sha256:[a-f0-9]{64}$"
+      }
+    },
+    "required": [
+      "image_ref",
+      "image_digest"
+    ]
+  },
+  "effect": "BUILD",
+  "artifactOutputs": {
+    "image_ref": {
+      "kind": "container_image",
+      "digestOutput": "image_digest"
+    }
+  },
+  "ownerKind": "JOB_RUN",
+  "ownerId": "33333333-3333-4333-8333-333333333333",
+  "scriptDigest": "sha256:221ecb0372726a366e0be2857f2adde7e0a25044491f1cd4727155ad28fada01",
+  "templateContentDigest": "sha256:640597cbc964cea3f72a2aaf3a8bab8723a5600b0612c5b8dd6ab9095cdb0680"
+}

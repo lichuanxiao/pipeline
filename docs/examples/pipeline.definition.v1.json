@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "devops.pipeline/v1",
+  "parametersSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "release_note": {
+        "type": "string",
+        "maxLength": 1000
+      }
+    },
+    "required": [
+      "release_note"
+    ]
+  },
+  "parameterDefaults": {
+    "release_note": "常规发布"
+  },
+  "stages": [
+    {
+      "key": "quality",
+      "name": "质量检查",
+      "jobs": [
+        {
+          "key": "unit_test",
+          "name": "单元测试",
+          "template": {
+            "key": "source.test",
+            "version": "1.0.0"
+          },
+          "triggerMode": "AUTO",
+          "timeoutSeconds": 900,
+          "inputs": {
+            "script_path": {
+              "from": "literal",
+              "value": ".devops/test.sh"
+            }
+          }
+        },
+        {
+          "key": "lint",
+          "name": "静态检查",
+          "template": {
+            "key": "source.test",
+            "version": "1.0.0"
+          },
+          "triggerMode": "AUTO",
+          "timeoutSeconds": 900,
+          "inputs": {
+            "script_path": {
+              "from": "literal",
+              "value": ".devops/lint.sh"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "image",
+      "name": "镜像构建",
+      "jobs": [
+        {
+          "key": "build_image",
+          "name": "构建并推送镜像",
+          "template": {
+            "key": "image.build-push",
+            "version": "1.0.0"
+          },
+          "triggerMode": "AUTO",
+          "timeoutSeconds": 1800,
+          "inputs": {
+            "dockerfile": {
+              "from": "literal",
+              "value": "Dockerfile"
+            },
+            "context": {
+              "from": "literal",
+              "value": "."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "deploy",
+      "name": "应用部署",
+      "jobs": [
+        {
+          "key": "deploy_app",
+          "name": "部署到 Kubernetes",
+          "template": {
+            "key": "kubernetes.deploy",
+            "version": "1.0.0"
+          },
+          "triggerMode": "MANUAL",
+          "timeoutSeconds": 900,
+          "inputs": {
+            "image_ref": {
+              "from": "job",
+              "jobKey": "build_image",
+              "output": "image_ref"
+            },
+            "release_note": {
+              "from": "run",
+              "path": "parameters.release_note"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

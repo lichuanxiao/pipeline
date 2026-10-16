@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "devops.result/v1",
+  "ownerKind": "JOB_RUN",
+  "executionId": "22222222-2222-4222-8222-222222222222",
+  "jobRunId": "33333333-3333-4333-8333-333333333333",
+  "scriptDigest": "sha256:221ecb0372726a366e0be2857f2adde7e0a25044491f1cd4727155ad28fada01",
+  "outputs": {
+    "image_ref": "registry.example.com/demo/demo-api@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+}

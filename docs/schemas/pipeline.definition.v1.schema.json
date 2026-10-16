@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Published pipeline definition v1",
+  "description": "Current published definition contract. Drafts allow incomplete fields; publication also validates total Job count, template contracts, reference order, ownership and deployment conflicts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "parametersSchema",
+    "parameterDefaults",
+    "stages"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "devops.pipeline/v1"
+    },
+    "parametersSchema": {
+      "type": "object"
+    },
+    "parameterDefaults": {
+      "type": "object"
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/stage"
+      },
+      "maxItems": 20
+    }
+  },
+  "$defs": {
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "jobs"
+      ],
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/key"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "jobs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/job"
+          },
+          "maxItems": 20
+        }
+      }
+    },
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "template",
+        "triggerMode",
+        "inputs"
+      ],
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/key"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "template": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key",
+            "version"
+          ],
+          "properties": {
+            "key": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-z][a-z0-9.-]{0,127}$",
+              "maxLength": 128
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+              "maxLength": 32
+            }
+          }
+        },
+        "triggerMode": {
+          "enum": [
+            "AUTO",
+            "MANUAL"
+          ]
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/binding"
+          }
+        }
+      }
+    },
+    "binding": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/literalBinding"
+        },
+        {
+          "$ref": "#/$defs/runBinding"
+        },
+        {
+          "$ref": "#/$defs/cmdbBinding"
+        },
+        {
+          "$ref": "#/$defs/jobBinding"
+        }
+      ]
+    },
+    "literalBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "value"
+      ],
+      "properties": {
+        "from": {
+          "const": "literal"
+        },
+        "value": {}
+      }
+    },
+    "runBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "path"
+      ],
+      "properties": {
+        "from": {
+          "const": "run"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "cmdbBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "path"
+      ],
+      "properties": {
+        "from": {
+          "const": "cmdb"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "jobBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "jobKey",
+        "output"
+      ],
+      "properties": {
+        "from": {
+          "const": "job"
+        },
+        "jobKey": {
+          "$ref": "#/$defs/key"
+        },
+        "output": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    }
+  }
+}

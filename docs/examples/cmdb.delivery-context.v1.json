@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "devops.cmdb-context/v1",
+  "contextVersion": "ctx-example-7",
+  "generatedAt": "2026-10-16T02:00:00Z",
+  "space": {
+    "id": "44444444-4444-4444-8444-444444444444",
+    "key": "space-demo",
+    "status": "ACTIVE"
+  },
+  "application": {
+    "id": "55555555-5555-4555-8555-555555555555",
+    "key": "demo-api",
+    "status": "ACTIVE"
+  },
+  "environment": {
+    "id": "66666666-6666-4666-8666-666666666666",
+    "key": "test",
+    "enabled": true,
+    "protected": false
+  },
+  "source": {
+    "repositoryUrl": "https://git.example.com/team/demo-api.git",
+    "defaultRef": "refs/heads/main",
+    "credentialRef": "cred-source-demo"
+  },
+  "image": {
+    "registryId": "registry-demo",
+    "repository": "registry.example.com/demo/demo-api",
+    "credentialRef": "cred-registry-demo"
+  },
+  "deploymentTarget": {
+    "id": "target-demo-test",
+    "targetIdentityId": "target-identity-demo",
+    "clusterId": "cluster-test",
+    "clusterIdentity": "cluster-identity-test",
+    "namespace": "demo-test",
+    "workloadKind": "Deployment",
+    "workloadName": "demo-api",
+    "containerName": "api",
+    "credentialRef": "cred-deploy-demo",
+    "enabled": true
+  },
+  "credentialReferences": [
+    {
+      "id": "cred-source-demo",
+      "controllerId": "jenkins-primary",
+      "externalId": "space-demo-source",
+      "kind": "username_password",
+      "purpose": "source",
+      "status": "ACTIVE",
+      "version": 1
+    },
+    {
+      "id": "cred-registry-demo",
+      "controllerId": "jenkins-primary",
+      "externalId": "space-demo-registry",
+      "kind": "username_password",
+      "purpose": "registry",
+      "status": "ACTIVE",
+      "version": 1
+    },
+    {
+      "id": "cred-deploy-demo",
+      "controllerId": "jenkins-primary",
+      "externalId": "space-demo-deploy",
+      "kind": "kubeconfig",
+      "purpose": "deploy",
+      "status": "ACTIVE",
+      "version": 1
+    }
+  ]
+}

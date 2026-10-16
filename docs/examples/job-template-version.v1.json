@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "devops.job-template/v1",
+  "templateKey": "image.build-push",
+  "version": "1.0.0",
+  "name": "镜像构建推送",
+  "inputsSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "dockerfile": {
+        "type": "string",
+        "minLength": 1
+      },
+      "context": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required": [
+      "dockerfile",
+      "context"
+    ]
+  },
+  "outputsSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "image_ref": {
+        "type": "string",
+        "pattern": "^[^\\s]+@sha256:[a-f0-9]{64}$"
+      },
+      "image_digest": {
+        "type": "string",
+        "pattern": "^sha256:[a-f0-9]{64}$"
+      }
+    },
+    "required": [
+      "image_ref",
+      "image_digest"
+    ]
+  },
+  "contextRequirements": [
+    "source",
+    "image"
+  ],
+  "credentialSlots": {
+    "registry": {
+      "kind": "username_password",
+      "contextPath": "image.credential_ref"
+    }
+  },
+  "executor": {
+    "kind": "jenkins",
+    "agentLabel": "devops-build",
+    "sourceRequired": true,
+    "defaultTimeoutSeconds": 1800,
+    "maxTimeoutSeconds": 3600,
+    "script": {
+      "interpreter": "bash",
+      "content": "set -euo pipefail\ndockerfile=$(jq -er '.inputs.dockerfile' \"$DEVOPS_INPUT_FILE\")\ncontext=$(jq -er '.inputs.context' \"$DEVOPS_INPUT_FILE\")\nrepository=$(jq -er '.context.image.repository' \"$DEVOPS_INPUT_FILE\")\nrun_id=$(jq -er '.context.run.id' \"$DEVOPS_INPUT_FILE\")\njob_key=$(jq -er '.context.job.key' \"$DEVOPS_INPUT_FILE\")\nmetadata_file=$(mktemp)\ntrap 'rm -f \"$metadata_file\"' EXIT\ndocker buildx build --push --file \"$dockerfile\" --tag \"${repository}:${run_id}-${job_key}\" --metadata-file \"$metadata_file\" -- \"$context\"\ndigest=$(jq -er '.\"containerimage.digest\"' \"$metadata_file\")\njq -n --arg image_ref \"${repository}@${digest}\" --arg image_digest \"$digest\" '{image_ref: $image_ref, image_digest: $image_digest}' > \"$DEVOPS_OUTPUT_FILE\"\n"
+    }
+  },
+  "effect": "BUILD",
+  "artifactOutputs": {
+    "image_ref": {
+      "kind": "container_image",
+      "digestOutput": "image_digest"
+    }
+  }
+}
